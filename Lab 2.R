@@ -51,7 +51,7 @@ hist(evals$score, col = "blue", main = "No Transformation Evaluation Score")
 hist(evals$age, col = "green", main = "No transformation Age Score")
 hist(sqrt(evals$bty_avg), col = "orange", main = "Square Root No Bty Avg Score")
 
-m2_new <- lm(score ~ age + rank + gender + bty_avg + age * rank + age * gender + gender * rank, data = evals)
+m2_new <- lm(score ~ age + rank + gender + sqrt(bty_avg) + age * rank + age * gender + gender * rank, data = evals)
 summary(m2_new)
 
 
