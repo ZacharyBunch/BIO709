@@ -70,7 +70,7 @@ m_gala <- glm(Species ~ Area + Elevation + Nearest + Adjacent + Area * Elevation
 summary(m_gala) 
 
 #2
-capture.output(summary(m_gala) , file = "m_gala.txt")
+capture.output(summary(m_gala) , file = "Bunch_m_gala.txt")
 
 #3
 
@@ -85,6 +85,20 @@ data.new <- data.frame(cbind(fake.Elevation, Mean_Nearest, Mean_Adjacent, Mean_A
 
 fake.Y <- predict(m_gala, list(Elevation = fake.Elevation, Nearest = Mean_Nearest, Adjacent = Mean_Adjacent, Area = Mean_Area), type = 'response') # Predicted Y
 
+# Create the 2-panel plot
+#Clear old graphs - causing interactions?
+dev.off()
+
+par(mfrow = c(1, 2))
+
+#### Graphs ####
+
+## Create the Residuals vs. Fitted Values plot
+
+plot(m_gala, which = 1, col = "blue")
+
+# Panel 2: QQ Plot
+plot(m_gala, which = 2, col = "red")
 
 # Set a custom color scheme
 plot_color <- rgb(0.2, 0.4, 0.8, alpha = 0.7)  # Adjust RGB values as needed
@@ -98,17 +112,5 @@ ggplot(gala, aes(x = Elevation, y = Species)) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 
-# Create the 2-panel plot
-#Clear old graphs - causing interactions?
-dev.off()
-
-par(mfrow = c(1, 2))
-
-## Create the Residuals vs. Fitted Values plot
-
-plot(m_gala, which = 1, col = "blue")
-
-# Panel 2: QQ Plot
-plot(m_gala, which = 2, col = "red")
 
 
