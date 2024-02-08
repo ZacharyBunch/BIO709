@@ -87,37 +87,48 @@ env_data <- turtle[, 4:28]
 
 # Perform Principal Component Analysis (PCA)
 pca_result <- prcomp(env_data, scale. = TRUE)
-rda_scores <- scores(rda_result, display = "sites")
 
 
 
 # Perform Redundancy Analysis (RDA)
 rda_result <- rda(env_data)
+
 ### 1 ####
 
+# p <- ordiplot(rda_result, choices = c(1, 2), display = 'sites')
+# ordiellipse(p, groups = as.factor(turtle$turtle), conf = 0.9, col = cols) # polygons will be 90% confidence interva
+
 p <- ordiplot(rda_result, choices = c(1, 2), display = 'sites')
-ordiellipse(p, groups = as.factor(turtle$turtle), conf = 0.9, col = cols) # polygons will be 90% confidence interva
+ordispider(p, groups = as.factor(turtle$turtle), conf = 0.9, col = cols) # polygons will be 90% confidence interva
 
 #### 2 ####
 
 # Plot the ordination using ordiplot
-ordiplot(rda_scores, type = "n")  # 'n' to create an empty plot
+# p_2 <- scores(rda_result, choices = c(1, 2), display = "sites")
+# 
+# # Add points for each sample
+# points(p_2[turtle$turtle == 1, ], col = "red", pch = 19)
+# points(p_2[turtle$turtle == 0, ], col = "blue", pch = 19)
+# 
+# # Add identifiers around the two groups using ordiellipse()
+# cols <- c("red", "blue")  # Custom color scheme
+# ordiellipse(p_2[turtle$turtle == 1, ], conf = 0.95, draw = "polygon", col = adjustcolor(cols[1], 0.3), lty = 2, groups = turtle$turtle[turtle$turtle == 1])
+# ordiellipse(p_2[turtle$turtle == 0, ], conf = 0.95, draw = "polygon", col = adjustcolor(cols[2], 0.3), lty = 2, groups = turtle$turtle[turtle$turtle == 0])
+
+# Compute the PCoA scores
+p_2 <- scores(rda_result, choices = c(1, 2), display = "sites")
 
 # Add points for each sample
-points(rda_scores[turtle$turtle == 1, ], col = "red", pch = 19)
-points(rda_scores[turtle$turtle == 0, ], col = "blue", pch = 19)
+points(p_2[turtle$turtle == 1, ], col = "red", pch = 19)
+points(p_2[turtle$turtle == 0, ], col = "blue", pch = 19)
 
-# Add identifiers around the two groups using ordiellipse()
+# Add identifiers around the two groups using ordispider()
 cols <- c("red", "blue")  # Custom color scheme
-ordiellipse(rda_scores[turtle$turtle == 1, ], conf = 0.95, draw = "polygon", col = adjustcolor(cols[1], 0.3), lty = 2, groups = turtle$turtle[turtle$turtle == 1])
-ordiellipse(rda_scores[turtle$turtle == 0, ], conf = 0.95, draw = "polygon", col = adjustcolor(cols[2], 0.3), lty = 2, groups = turtle$turtle[turtle$turtle == 0])
-
-
-# Add labels to points
-text(rda_scores, labels = rownames(env_data), pos = 3, col = "gray")
+ordispider(p_2[turtle$turtle == 1, ], groups = turtle$turtle[turtle$turtle == 1], col = adjustcolor(cols[1], 0.3))
+ordispider(p_2[turtle$turtle == 0, ], groups = turtle$turtle[turtle$turtle == 0], col = adjustcolor(cols[2], 0.3))
 
 # Add legend
-legend('topright', c('Wood Turtle', 'Random Area'), col = cols, pch = 19, cex = 0.5)
+legend('topright', c('Wood Turtle', 'No Turtle'), col = cols, pch = 19, cex = 0.5)
 
 
 # Add axis labels
@@ -133,16 +144,18 @@ screeplot(pca_result, type = "bar", main = "Scree Plot: Variation Explained by P
 ### 4 ###
 
 # Calculate dissimilarity matrix using Bray-Curtis dissimilarity
-dissimilarity <- vegdist(env_data, method = "bray")
+dissimilarity <- vegdist(env_data, method = "euclidian")
 
 # Conduct ANOSIM
 anosim_result <- anosim(dissimilarity, turtle$turtle)
+anosim_result
 
 # Capture ANOSIM summary
 capture.output(summary(anosim_result), file = "anosim.txt")
 
 # Conduct PERMANOVA
-permanova_result <- adonis2(env_data ~ turtle$turtle, permutations = 999, method = "bray")
+permanova_result <- adonis2(env_data ~ turtle$turtle, permutations = 999, method = "euclidian")
+permanova_result
 
 # Capture PERMANOVA summary
 capture.output(permanova_result, file = "permaova.txt")
