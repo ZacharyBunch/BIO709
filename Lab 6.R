@@ -2,6 +2,7 @@
 library(lme4)
 library(ggplot2)
 library(lattice)
+library(lemon)
 
 #### CSV LOAD ####
 embs <- read.csv("all-species-v6-reducedForGLMMs.csv")
@@ -73,7 +74,7 @@ m2 <- lmer(sqrt(embryocount) ~
 
 summary(m2)
 
-capture.output(m2, file = "Bunch_Lab_5_Model1.txt")
+capture.output(summary(m2), file = "Bunch_Lab_6_table1.txt")
 
 # 2 #
 
@@ -95,6 +96,7 @@ m3 <- lmer(sqrt(embryocount) ~
 
 summary(m3)
 
+capture.output(summary(m3), file = "Bunch_Lab_6_table2.txt")
 # 4 #
 # Extract species-specific random effects
 random_effects <- ranef(m3)$binomial
@@ -107,11 +109,76 @@ random_effects_df <- data.frame(species = species_names, intercept = random_effe
 
 
 # Create the plot
-ggplot(embs, aes(x = headbodylength, y = embryocount)) +
+ggplot(embs, aes(x = headbodylength, y = sqrt(embryocount))) +
   geom_point() +  # Scatter plot
   geom_abline(data = random_effects_df, aes(intercept = intercept, slope = slope, color = species)) +  # Species-specific lines
   scale_color_manual(values = rainbow(length(species_names))) +  # Species-specific colors
   labs(x = "Individual body size (headbodylength)", y = "Litter size (embryocount)") +  # Axis labels
-  theme_minimal()  # Minimal theme
+  theme_minimal() +
+  coord_cartesian(
+  xlim = NULL,
+  ylim = c(0,4),
+  expand = TRUE,
+  default = FALSE,
+  clip = "on") 
+
+ggplot(embs, aes(x = headbodylength, y = sqrt(embryocount))) +
+  geom_point() +  # Scatter plot
+  geom_abline(data = random_effects_df, aes(intercept = intercept, slope = slope, color = species)) +  # Species-specific lines
+  scale_color_manual(values = rainbow(length(species_names))) +  # Species-specific colors
+  labs(x = "Individual body size (headbodylength)", y = "Litter size (embryocount)") +  # Axis labels
+  theme_minimal() +
+  coord_cartesian(
+    xlim = NULL,
+    ylim = c(0,4),
+    expand = TRUE,
+    default = FALSE,
+    clip = "on") +
+  geom_smooth(method = 'lm', se = F)
+
+X <- predict(m3, re.form = NULL)
+
+ggplot(aes(x = headbodylength, y = sqrt(embryocount), col = unit)) +
+  geom_point(pch = 16) +
+  geom_line(aes(y = fit.c, col = unit), size = 2)  +
+  coord_cartesian(ylim = c(-40, 100))
+
+
+pred.Reaction <- predict(m3, newdata = embs, type = "response")
+pred.df <- data.frame(embs, pred.Reaction)
+
+
+ggplot(embs, aes(headbodylength, sqrt(embryocount))) + 
+  geom_point() + 
+  geom_line(data = pred.df, aes(headbodylength, pred.Reaction, color = binomial))# Species-specific lines
+  
+
+# predict()
+# get x,y, x_end, y_end
+# geom_segment
+
+B <- model.frame(m3)[,7] #species or binomial
+EC <- model.frame(m3)[,1] #sqrt(embryocount)
+HBL <- model.frame(m3)[,8] #log10(headbodylength)
+
+binomial <- aggregate(EC ~ B, FUN = min)[,1] #shows the 39 observations used
+y <- aggregate(EC ~ B, FUN = min)[,2] #[,2] makes the length the same and continuous (integer portion of m2)
+yend <- aggregate(EC ~ B, FUN = max)[,2]
+x <- aggregate(HBL ~ B, FUN = min)[,2]
+xend <- aggregate(HBL ~ B, FUN = max)[,2] 
+
+limit <- data.frame(binomial = binomial, x = x, xend = xend, y = y, yend = yend) 
+
+
+
+# 4 #
+
+ggplot(data = embs) +
+  ggtitle("M3 (model): Random Slopes and Intercepts by Species") +
+  labs(x = "Individual Body Length", y = "Individual Litter Size (square rooted)", color = "Species") +
+  geom_point(aes(headbodylength, sqrt(embryocount), color = binomial)) +
+  geom_segment(data = limit, mapping = aes(xend = xend, yend = yend, y = y, x = x, color = binomial)) + 
+  theme_bw() +
+  theme(legend.key.size = unit(0.5, "lines"))  # Adjust the size as needed
 
 
